@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useDispatch } from "react-redux";
-import { login } from "../redux/authSlice";
+import { signup } from "../redux/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 
 function Signup() {
@@ -17,8 +17,9 @@ function Signup() {
       return;
     }
 
-    dispatch(login({ email }));
-    navigate("/home");
+    dispatch(signup({ email, password }));
+    alert("Signup Successful! Please Login.");
+    navigate("/");
   };
 
   return (
@@ -36,16 +37,16 @@ function Signup() {
 
         <input
           type="password"
-          placeholder="Create Password"
+          placeholder="Enter Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
 
-        <button className="btn">Signup</button>
+        <button className="btn align-center">Signup</button>
 
         <p>
-          Already have account? <Link to="/">Login</Link>
+          Already have account? <Link to="/" style={{ textDecoration: 'underline', textDecorationColor: 'red', color:'red' }}>Login</Link>
         </p>
       </form>
     </div>

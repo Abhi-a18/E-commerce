@@ -1,9 +1,20 @@
 import { useSelector, useDispatch } from "react-redux";
-import { removeFromCart, clearCart } from "../redux/cartSlice";
+import {
+  removeFromCart,
+  clearCart,
+  increaseQuantity,
+  decreaseQuantity,
+} from "../redux/cartSlice";
 
 function Cart() {
   const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
+
+
+  const convertToINR = (usd) => {
+    const rate = 83;
+    return (usd * rate).toLocaleString("en-IN");
+  };
 
   const totalPrice = items.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -20,16 +31,54 @@ function Cart() {
         <>
           {items.map((item) => (
             <div key={item.id} className="cart-item">
-              <img src={item.thumbnail} alt={item.title} />
+              <img
+                src={item.thumbnail}
+                alt={item.title}
+                style={{ width: "100px" }}
+              />
+
               <div>
                 <h4>{item.title}</h4>
-                <p>Price: ${item.price}</p>
-                <p>Quantity: {item.quantity}</p>
-                <p>Total: ${item.price * item.quantity}</p>
+
+                <p>Price: ₹{convertToINR(item.price)}</p>
+
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    margin: "10px 0",
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      dispatch(decreaseQuantity(item.id))
+                    }
+                  >
+                    -
+                  </button>
+
+                  <span>{item.quantity}</span>
+
+                  <button
+                    onClick={() =>
+                      dispatch(increaseQuantity(item.id))
+                    }
+                  >
+                    +
+                  </button>
+                </div>
+
+                <p>
+                  Total: ₹
+                  {convertToINR(item.price * item.quantity)}
+                </p>
 
                 <button
                   className="btn"
-                  onClick={() => dispatch(removeFromCart(item.id))}
+                  onClick={() =>
+                    dispatch(removeFromCart(item.id))
+                  }
                 >
                   Remove
                 </button>
@@ -37,13 +86,14 @@ function Cart() {
             </div>
           ))}
 
-          <h2 style={{ marginTop: "20px" }}>
-            Grand Total: ${totalPrice.toFixed(2)}
+          <hr />
+
+          <h2>
+            Grand Total: ₹{convertToINR(totalPrice)}
           </h2>
 
           <button
             className="btn"
-            style={{ marginTop: "10px" }}
             onClick={() => dispatch(clearCart())}
           >
             Clear Cart

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { login } from "../redux/authSlice";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -9,15 +9,27 @@ function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const users = useSelector((state) => state.auth.users);
+  const currentUser = useSelector((state) => state.auth.currentUser);
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (password.length < 6) {
-      alert("Password must be at least 6 characters");
+    const existingUser = users.find(
+      (user) => user.email === email
+    );
+
+    if (!existingUser) {
+      alert("User not registered. Please Signup first.");
       return;
     }
 
-    dispatch(login({ email }));
+    if (existingUser.password !== password) {
+      alert("Incorrect Password");
+      return;
+    }
+
+    dispatch(login({ email, password }));
     navigate("/home");
   };
 
@@ -42,10 +54,10 @@ function Login() {
           required
         />
 
-        <button className="btn">Login</button>
+        <button className="btn align-center">Login</button>
 
         <p>
-          Don't have account? <Link to="/signup">Signup</Link>
+          Don't have account? <Link to="/signup" style={{ textDecoration: 'underline', textDecorationColor: 'red', color:'red' }}>Signup</Link>
         </p>
       </form>
     </div>
