@@ -46,7 +46,7 @@ function Signup() {
         <button className="btn align-center">Signup</button>
 
         <p>
-          Already have account? <Link to="/" style={{ textDecoration: 'underline', textDecorationColor: 'red', color:'red' }}>Login</Link>
+          Already have account? <Link to="/" style={{ textDecoration: 'underline', textDecorationColor: 'green', color:'green' ,fontWeight:"bold", textShadow:" 0 0 2px black"}}>Login</Link>
         </p>
       </form>
     </div>

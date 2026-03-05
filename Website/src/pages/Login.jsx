@@ -1,48 +1,61 @@
 import { useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
-  const [email, setEmail] = useState("");
+
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const users = useSelector((state) => state.auth.users);
-  const currentUser = useSelector((state) => state.auth.currentUser);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const existingUser = users.find(
-      (user) => user.email === email
-    );
+    try {
 
-    if (!existingUser) {
-      alert("User not registered. Please Signup first.");
-      return;
+      const res = await fetch("https://dummyjson.com/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password
+        })
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+
+        dispatch(login(data));
+
+        navigate("/home");
+
+      } else {
+        alert("Invalid Username or Password");
+      }
+
+    } catch (error) {
+      console.log(error);
+      alert("Login failed");
     }
-
-    if (existingUser.password !== password) {
-      alert("Incorrect Password");
-      return;
-    }
-
-    dispatch(login({ email, password }));
-    navigate("/home");
   };
 
   return (
     <div className="auth-wrapper">
       <form onSubmit={handleSubmit} className="auth-box">
+
         <h2>Login</h2>
 
         <input
-          type="email"
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          type="text"
+          placeholder="Enter Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
           required
         />
 
@@ -54,11 +67,8 @@ function Login() {
           required
         />
 
-        <button className="btn align-center">Login</button>
+        <button className="btn">Login</button>
 
-        <p>
-          Don't have account? <Link to="/signup" style={{ textDecoration: 'underline', textDecorationColor: 'red', color:'red' }}>Signup</Link>
-        </p>
       </form>
     </div>
   );

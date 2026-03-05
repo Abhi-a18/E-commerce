@@ -2,14 +2,16 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState } from "react";
 
+import AddProduct from "./pages/AddProduct";
 import Navbar from "./components/Navbar";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Checkout from "./pages/Checkout";
 
 function App() {
+
   const location = useLocation();
   const user = useSelector((state) => state.auth.user);
 
@@ -20,25 +22,26 @@ function App() {
 
   return (
     <>
-  
+
       {!hideNavbar && user && (
         <Navbar onSearch={setSearchItem} />
       )}
 
       <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
 
-        
-          
-          <Route element={<ProtectedRoute />}>
-  <Route
-    path="/home"
-    element={<Home searchTerm={searchItem} />}
-  />
-  <Route path="/cart" element={<Cart />} />
-</Route>
+        <Route path="/" element={<Login />} />
+        <Route element={<ProtectedRoute />}>
+          <Route
+            path="/home"
+            element={<Home searchTerm={searchItem} />}
+          />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/add-product" element={<AddProduct />} />
+          <Route path="/checkout" element={<Checkout />} />
+        </Route>
+
       </Routes>
+
     </>
   );
 }

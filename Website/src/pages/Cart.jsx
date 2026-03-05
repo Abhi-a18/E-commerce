@@ -1,4 +1,5 @@
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import {
   removeFromCart,
   clearCart,
@@ -9,7 +10,7 @@ import {
 function Cart() {
   const { items } = useSelector((state) => state.cart);
   const dispatch = useDispatch();
-
+  const navigate = useNavigate(); 
 
   const convertToINR = (usd) => {
     const rate = 83;
@@ -20,6 +21,15 @@ function Cart() {
     (total, item) => total + item.price * item.quantity,
     0
   );
+
+  const handleCheckout = () => {
+    if (items.length === 0) {
+      alert("Cart is Empty!");
+      return;
+    }
+
+    navigate("/checkout");
+  };
 
   return (
     <div className="container home-container">
@@ -92,12 +102,21 @@ function Cart() {
             Grand Total: ₹{convertToINR(totalPrice)}
           </h2>
 
-          <button
-            className="btn"
-            onClick={() => dispatch(clearCart())}
-          >
-            Clear Cart
-          </button>
+          <div style={{ marginTop: "20px", display: "flex", gap: "15px" }}>
+            <button
+              className="btn"
+              onClick={() => dispatch(clearCart())}
+            >
+              Clear Cart
+            </button>
+
+            <button
+              className="btn"
+              onClick={handleCheckout}
+            >
+              Proceed to Checkout
+            </button>
+          </div>
         </>
       )}
     </div>

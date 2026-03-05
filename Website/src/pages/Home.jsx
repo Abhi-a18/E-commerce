@@ -2,9 +2,15 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { addToCart } from "../redux/cartSlice";
+import { setProducts } from "../redux/ProductSlice";
 
 function Home({ searchTerm }) {
-  const [products, setProducts] = useState([]);
+
+  const dispatch = useDispatch();
+
+  const products = useSelector((state) => state.product.products);
+  const cartItems = useSelector((state) => state.cart.items);
+
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -12,61 +18,87 @@ function Home({ searchTerm }) {
   const [ratings, setRatings] = useState({});
   const [quantities, setQuantities] = useState({});
 
-  const dispatch = useDispatch();
-  const cartItems = useSelector((state) => state.cart.items);
-
   const convertToINR = (usd) => {
-    const rate = 83;
-    return (usd * rate).toLocaleString("en-IN");
+    return (usd * 83).toLocaleString("en-IN");
   };
 
   useEffect(() => {
-    axios.get("https://dummyjson.com/products").then((res) => {
-      setProducts(res.data.products);
-      setFilteredProducts(res.data.products);
+    const fetchProducts = async () => {
+      try {
+        const res = await axios.get("https://dummyjson.com/products");
 
-      const uniqueCategories = [
-        "all",
-        ...new Set(res.data.products.map((item) => item.category)),
-      ];
-      setCategories(uniqueCategories);
+        if (res.data && res.data.products) {
+          dispatch(setProducts(res.data.products));
+        }
 
-      const initialQty = {};
-      res.data.products.forEach((item) => {
-        initialQty[item.id] = 1;
-      });
-      setQuantities(initialQty);
-    });
-  }, []);
+      } catch (error) {
+        console.log("API Error:", error);
+      }
+    };
+
+    if (!products || products.length === 0) {
+      fetchProducts();
+    }
+
+  }, [dispatch]);
+
 
   useEffect(() => {
-    let updatedProducts = [...products];
+
+    if (!products || products.length === 0) return;
+
+    const uniqueCategories = [
+      "all",
+      ...new Set(products.map((p) => p.category))
+    ];
+
+    setCategories(uniqueCategories);
+
+    const qty = {};
+    products.forEach((p) => {
+      qty[p.id] = 1;
+    });
+
+    setQuantities(qty);
+
+  }, [products]);
+
+
+  useEffect(() => {
+
+    let updated = [...products];
 
     if (searchTerm) {
-      updatedProducts = updatedProducts.filter((item) =>
-        item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
+      updated = updated.filter(
+        (item) =>
+          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.category.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (selectedCategory !== "all") {
-      updatedProducts = updatedProducts.filter(
+      updated = updated.filter(
         (item) => item.category === selectedCategory
       );
     }
 
     if (sortOrder === "low") {
-      updatedProducts.sort((a, b) => a.price - b.price);
-    } else if (sortOrder === "high") {
-      updatedProducts.sort((a, b) => b.price - a.price);
+      updated.sort((a, b) => a.price - b.price);
     }
 
-    setFilteredProducts(updatedProducts);
-  }, [searchTerm, selectedCategory, sortOrder, products]);
+    if (sortOrder === "high") {
+      updated.sort((a, b) => b.price - a.price);
+    }
 
-  const isInCart = (id) => {
-    return cartItems.some((item) => item.id === id);
-  };
+    setFilteredProducts(updated);
+
+  }, [products, searchTerm, selectedCategory, sortOrder]);
+
+
+
+  const isInCart = (id) =>
+    cartItems.some((item) => item.id === id);
+
 
   const increaseQty = (id) => {
     setQuantities((prev) => ({
@@ -82,6 +114,7 @@ function Home({ searchTerm }) {
     }));
   };
 
+
   const handleRating = (productId, value) => {
     setRatings((prev) => ({
       ...prev,
@@ -89,8 +122,11 @@ function Home({ searchTerm }) {
     }));
   };
 
+
   const renderStars = (productId, apiRating) => {
-    const currentRating = ratings[productId] || Math.round(apiRating);
+
+    const currentRating =
+      ratings[productId] || Math.round(apiRating);
 
     return (
       <div style={{ display: "flex", gap: "5px", cursor: "pointer" }}>
@@ -110,9 +146,11 @@ function Home({ searchTerm }) {
     );
   };
 
+
   return (
-    <div className="container home-container">
-      <h2 className="home-title">Products</h2>
+    <div className="container home-container flex align-center flex-col">
+
+      <h2>Products</h2>
 
       <div style={{ marginBottom: "20px" }}>
         {categories.map((cat) => (
@@ -144,22 +182,27 @@ function Home({ searchTerm }) {
         </select>
       </div>
 
+
       <div className="product-grid">
+
         {filteredProducts.map((item) => {
-          const added = isInCart(item.id);
+
           const quantity = quantities[item.id] || 1;
 
           return (
             <div key={item.id} className="product-card">
+
               <img src={item.thumbnail} alt={item.title} />
+
               <h4>{item.title}</h4>
+
               <p>₹{convertToINR(item.price)}</p>
 
               {renderStars(item.id, item.rating)}
 
-              <div style={{ display: "flex", gap: "10px", justifyContent: "center", margin: "10px 0" }}>
+              <div style={{ margin: "10px 0" }}>
                 <button onClick={() => decreaseQty(item.id)}>-</button>
-                <span>{quantity}</span>
+                <span style={{ margin: "0 10px" }}>{quantity}</span>
                 <button onClick={() => increaseQty(item.id)}>+</button>
               </div>
 
@@ -169,12 +212,15 @@ function Home({ searchTerm }) {
                   dispatch(addToCart({ ...item, quantity }))
                 }
               >
-                {added ? "Added ✓" : "Add To Cart"}
+                {isInCart(item.id) ? "Added ✓" : "Add To Cart"}
               </button>
+
             </div>
           );
         })}
+
       </div>
+
     </div>
   );
 }
