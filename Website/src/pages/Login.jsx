@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 function Login() {
 
@@ -16,32 +17,35 @@ function Login() {
 
     try {
 
-      const res = await fetch("https://dummyjson.com/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+      const res = await axios.post(
+        "https://dummyjson.com/auth/login",
+        {
+          username,
+          password
         },
-        body: JSON.stringify({
-          username: username,
-          password: password
-        })
-      });
+        {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        }
+      );
 
-      const data = await res.json();
+      console.log(res.data);
 
-      if (res.ok) {
+      dispatch(login(res.data));
 
-        dispatch(login(data));
-
-        navigate("/home");
-
-      } else {
-        alert("Invalid Username or Password");
-      }
+      navigate("/home");
 
     } catch (error) {
+
       console.log(error);
-      alert("Login failed");
+
+      if (error.response) {
+        alert(error.response.data.message);
+      } else {
+        alert("Server Error");
+      }
+
     }
   };
 
@@ -67,7 +71,9 @@ function Login() {
           required
         />
 
-        <button className="btn">Login</button>
+        <button type="submit" className="btn">
+          Login
+        </button>
 
       </form>
     </div>

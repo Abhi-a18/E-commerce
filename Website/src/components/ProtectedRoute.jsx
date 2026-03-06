@@ -3,12 +3,11 @@ import { Navigate, Outlet } from "react-router-dom";
 
 function ProtectedRoute() {
 
-  const user = useSelector((state) => state.auth?.user);
+  const user = useSelector((state) => state.auth.user);
 
-  // If user not logged in redirect to login
-  if (!user) {
-    return <Navigate to="/" replace />;
-  }
+if (!user) {
+  return <Navigate to="/" replace />;
+}
 
   return <Outlet />;
 }

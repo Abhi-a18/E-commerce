@@ -18,17 +18,31 @@ function Home({ searchTerm }) {
   const [ratings, setRatings] = useState({});
   const [quantities, setQuantities] = useState({});
 
+  /* PAGINATION STATE */
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 15;
+
   const convertToINR = (usd) => {
     return (usd * 83).toLocaleString("en-IN");
   };
 
   useEffect(() => {
+
     const fetchProducts = async () => {
       try {
+
         const res = await axios.get("https://dummyjson.com/products");
 
         if (res.data && res.data.products) {
+
           dispatch(setProducts(res.data.products));
+
+          const qty = {};
+          res.data.products.forEach((p) => {
+            qty[p.id] = 1;
+          });
+
+          setQuantities(qty);
         }
 
       } catch (error) {
@@ -36,7 +50,7 @@ function Home({ searchTerm }) {
       }
     };
 
-    if (!products || products.length === 0) {
+    if (products.length === 0) {
       fetchProducts();
     }
 
@@ -45,7 +59,7 @@ function Home({ searchTerm }) {
 
   useEffect(() => {
 
-    if (!products || products.length === 0) return;
+    if (!products.length) return;
 
     const uniqueCategories = [
       "all",
@@ -53,13 +67,6 @@ function Home({ searchTerm }) {
     ];
 
     setCategories(uniqueCategories);
-
-    const qty = {};
-    products.forEach((p) => {
-      qty[p.id] = 1;
-    });
-
-    setQuantities(qty);
 
   }, [products]);
 
@@ -91,9 +98,9 @@ function Home({ searchTerm }) {
     }
 
     setFilteredProducts(updated);
+    setCurrentPage(1);
 
   }, [products, searchTerm, selectedCategory, sortOrder]);
-
 
 
   const isInCart = (id) =>
@@ -101,25 +108,32 @@ function Home({ searchTerm }) {
 
 
   const increaseQty = (id) => {
+
     setQuantities((prev) => ({
       ...prev,
-      [id]: prev[id] + 1,
+      [id]: prev[id] + 1
     }));
+
   };
 
+
   const decreaseQty = (id) => {
+
     setQuantities((prev) => ({
       ...prev,
-      [id]: prev[id] > 1 ? prev[id] - 1 : 1,
+      [id]: prev[id] > 1 ? prev[id] - 1 : 1
     }));
+
   };
 
 
   const handleRating = (productId, value) => {
+
     setRatings((prev) => ({
       ...prev,
-      [productId]: value,
+      [productId]: value
     }));
+
   };
 
 
@@ -129,31 +143,55 @@ function Home({ searchTerm }) {
       ratings[productId] || Math.round(apiRating);
 
     return (
+
       <div style={{ display: "flex", gap: "5px", cursor: "pointer" }}>
-        {[1, 2, 3, 4, 5].map((star) => (
+
+        {[1,2,3,4,5].map((star) => (
+
           <span
             key={star}
             style={{
               fontSize: "18px",
-              color: star <= currentRating ? "gold" : "#ccc",
+              color: star <= currentRating ? "gold" : "#ccc"
             }}
             onClick={() => handleRating(productId, star)}
           >
             ★
           </span>
+
         ))}
+
       </div>
+
     );
+
   };
 
 
+  /* PAGINATION LOGIC */
+
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+
+  const currentProducts =
+    filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
+
+  const totalPages =
+    Math.ceil(filteredProducts.length / productsPerPage);
+
+
+
   return (
+
     <div className="container home-container flex align-center flex-col">
 
       <h2>Products</h2>
 
+
       <div style={{ marginBottom: "20px" }}>
+
         {categories.map((cat) => (
+
           <button
             key={cat}
             onClick={() => setSelectedCategory(cat)}
@@ -163,33 +201,41 @@ function Home({ searchTerm }) {
               background: selectedCategory === cat ? "#000" : "#eee",
               color: selectedCategory === cat ? "#fff" : "#000",
               border: "none",
-              cursor: "pointer",
+              cursor: "pointer"
             }}
           >
             {cat}
           </button>
+
         ))}
+
       </div>
 
+
       <div style={{ marginBottom: "20px" }}>
+
         <select
           value={sortOrder}
           onChange={(e) => setSortOrder(e.target.value)}
         >
+
           <option value="">Sort By Price</option>
           <option value="low">Low → High</option>
           <option value="high">High → Low</option>
+
         </select>
+
       </div>
 
 
       <div className="product-grid">
 
-        {filteredProducts.map((item) => {
+        {currentProducts.map((item) => {
 
           const quantity = quantities[item.id] || 1;
 
           return (
+
             <div key={item.id} className="product-card">
 
               <img src={item.thumbnail} alt={item.title} />
@@ -200,11 +246,23 @@ function Home({ searchTerm }) {
 
               {renderStars(item.id, item.rating)}
 
-              <div style={{ margin: "10px 0" }}>
-                <button onClick={() => decreaseQty(item.id)}>-</button>
-                <span style={{ margin: "0 10px" }}>{quantity}</span>
-                <button onClick={() => increaseQty(item.id)}>+</button>
-              </div>
+
+              {isInCart(item.id) && (
+
+                <div style={{ margin: "10px 0" }}>
+
+                  <button onClick={() => decreaseQty(item.id)}>-</button>
+
+                  <span style={{ margin: "0 10px" }}>
+                    {quantity}
+                  </span>
+
+                  <button onClick={() => increaseQty(item.id)}>+</button>
+
+                </div>
+
+              )}
+
 
               <button
                 className="btn"
@@ -212,17 +270,62 @@ function Home({ searchTerm }) {
                   dispatch(addToCart({ ...item, quantity }))
                 }
               >
+
                 {isInCart(item.id) ? "Added ✓" : "Add To Cart"}
+
               </button>
 
             </div>
+
           );
+
         })}
 
       </div>
 
+
+      
+
+      <div style={{ marginTop: "30px", display: "flex", justifyContent: "center", alignItems: "center"}}>
+
+        <button
+          disabled={currentPage === 1}
+          onClick={() => setCurrentPage((prev) => prev - 1)}
+        >
+          ◀
+        </button>
+
+
+        {[...Array(totalPages)].map((_, index) => (
+
+          <button
+            key={index}
+            onClick={() => setCurrentPage(index + 1)}
+            style={{
+              margin: "5px",
+              background: currentPage === index + 1 ? "#000" : "#eee",
+              color: currentPage === index + 1 ? "#fff" : "#000"
+            }}
+          >
+            {index + 1}
+          </button>
+
+        ))}
+
+
+        <button
+          disabled={currentPage === totalPages}
+          onClick={() => setCurrentPage((prev) => prev + 1)}
+        >
+          ▶
+        </button>
+
+      </div>
+
     </div>
+
   );
+
 }
 
 export default Home;
