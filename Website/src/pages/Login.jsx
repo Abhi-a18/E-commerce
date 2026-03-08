@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { login } from "../redux/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../redux/authSlice";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 
 function Login() {
 
@@ -12,40 +11,17 @@ function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const { loading, error } = useSelector((state) => state.auth);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
+    const result = await dispatch(
+      loginUser({ username, password })
+    );
 
-      const res = await axios.post(
-        "https://dummyjson.com/auth/login",
-        {
-          username,
-          password
-        },
-        {
-          headers: {
-            "Content-Type": "application/json"
-          }
-        }
-      );
-
-      console.log(res.data);
-
-      dispatch(login(res.data));
-
+    if (loginUser.fulfilled.match(result)) {
       navigate("/home");
-
-    } catch (error) {
-
-      console.log(error);
-
-      if (error.response) {
-        alert(error.response.data.message);
-      } else {
-        alert("Server Error");
-      }
-
     }
   };
 
@@ -54,6 +30,8 @@ function Login() {
       <form onSubmit={handleSubmit} className="auth-box">
 
         <h2>Login</h2>
+
+        {error && <p style={{color:"red"}}>{error}</p>}
 
         <input
           type="text"
@@ -71,8 +49,8 @@ function Login() {
           required
         />
 
-        <button type="submit" className="btn">
-          Login
+        <button type="submit" className="btn" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
         </button>
 
       </form>

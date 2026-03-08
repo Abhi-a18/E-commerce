@@ -32,6 +32,7 @@ else {
 
 const handleLogout = () => {
 alert("Logged out successfully");
+localStorage.removeItem("auth"); 
 navigate("/");
 };
 
@@ -93,7 +94,6 @@ return (
       style={{ display: "flex", gap: "15px", alignItems: "center" }}
     >
 
-      {/* Dark Mode Button */}
 
       <button
         className="btn"
@@ -103,8 +103,6 @@ return (
       </button>
 
 
-
-      {/* Profile Circle */}
 
       <div className="profile-circle">
         {user?.email?.charAt(0).toUpperCase()}
@@ -128,7 +126,6 @@ return (
 
 
 
-    {/* Cart with Notification */}
 
     <div style={{ position: "relative" }}>
 
