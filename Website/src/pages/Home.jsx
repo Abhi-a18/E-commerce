@@ -18,7 +18,6 @@ function Home({ searchTerm }) {
   const [ratings, setRatings] = useState({});
   const [quantities, setQuantities] = useState({});
 
-  /* PAGINATION STATE */
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 15;
 
@@ -167,9 +166,6 @@ function Home({ searchTerm }) {
 
   };
 
-
-  /* PAGINATION LOGIC */
-
   const indexOfLastProduct = currentPage * productsPerPage;
   const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
 
@@ -282,9 +278,6 @@ function Home({ searchTerm }) {
         })}
 
       </div>
-
-
-      
 
       <div style={{ marginTop: "30px", display: "flex", justifyContent: "center", alignItems: "center"}}>
 
