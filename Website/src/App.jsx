@@ -18,7 +18,6 @@ function App() {
       {!hideNavbar && user && (
         <Navbar onSearch={setSearchItem} />
       )}
-x``
       
       <Outlet />
     </>
