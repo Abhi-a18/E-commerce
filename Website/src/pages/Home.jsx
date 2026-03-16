@@ -236,7 +236,7 @@ function Home({ searchTerm }) {
 
               <img src={item.thumbnail} alt={item.title} />
 
-              {/* FIXED FOR DARK MODE */}
+             
               <h4 className="text-black dark:text-white">{item.title}</h4>
 
               <p>₹{convertToINR(item.price)}</p>
@@ -250,7 +250,6 @@ function Home({ searchTerm }) {
 
                   <button onClick={() => decreaseQty(item.id)}>-</button>
 
-                  {/* FIXED FOR DARK MODE */}
                   <span
                     style={{ margin: "0 10px" }}
                     className="text-black dark:text-white"
