@@ -1,328 +1,237 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { addToCart } from "../redux/cartSlice";
+import {
+  addToCart,
+  increaseQuantity,
+  decreaseQuantity,
+} from "../redux/cartSlice";
 import { setProducts } from "../redux/ProductSlice";
+import axios from "axios";
+import { useOutletContext } from "react-router-dom";
 
-function Home({ searchTerm }) {
-
+function Home() {
   const dispatch = useDispatch();
-
   const products = useSelector((state) => state.product.products);
   const cartItems = useSelector((state) => state.cart.items);
 
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const { searchTerm, darkMode } = useOutletContext();
+
+  const [filtered, setFiltered] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("");
-  const [ratings, setRatings] = useState({});
-  const [quantities, setQuantities] = useState({});
 
   const [currentPage, setCurrentPage] = useState(1);
-  const productsPerPage = 15;
-
-  const convertToINR = (usd) => {
-    return (usd * 83).toLocaleString("en-IN");
-  };
+  const productsPerPage = 8;
 
   useEffect(() => {
-
-    const fetchProducts = async () => {
-      try {
-
-        const res = await axios.get("https://dummyjson.com/products");
-
-        if (res.data && res.data.products) {
-
-          dispatch(setProducts(res.data.products));
-
-          const qty = {};
-          res.data.products.forEach((p) => {
-            qty[p.id] = 1;
-          });
-
-          setQuantities(qty);
-        }
-
-      } catch (error) {
-        console.log("API Error:", error);
-      }
-    };
-
     if (products.length === 0) {
-      fetchProducts();
+      axios.get("https://dummyjson.com/products").then((res) => {
+        dispatch(setProducts(res.data.products));
+      });
     }
-
-  }, [dispatch]);
-
+  }, [dispatch, products.length]);
 
   useEffect(() => {
-
-    if (!products.length) return;
-
-    const uniqueCategories = [
-      "all",
-      ...new Set(products.map((p) => p.category))
-    ];
-
-    setCategories(uniqueCategories);
-
+    const cats = ["all", ...new Set(products.map((p) => p.category))];
+    setCategories(cats);
   }, [products]);
 
-
   useEffect(() => {
+    let temp = [...products];
 
-    let updated = [...products];
-
-    if (searchTerm) {
-      updated = updated.filter(
-        (item) =>
-          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    if (searchTerm)
+      temp = temp.filter((p) =>
+        p.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    }
 
-    if (selectedCategory !== "all") {
-      updated = updated.filter(
-        (item) => item.category === selectedCategory
-      );
-    }
+    if (selectedCategory !== "all")
+      temp = temp.filter((p) => p.category === selectedCategory);
 
-    if (sortOrder === "low") {
-      updated.sort((a, b) => a.price - b.price);
-    }
+    if (sortOrder === "low") temp.sort((a, b) => a.price - b.price);
+    if (sortOrder === "high") temp.sort((a, b) => b.price - a.price);
 
-    if (sortOrder === "high") {
-      updated.sort((a, b) => b.price - a.price);
-    }
-
-    setFilteredProducts(updated);
+    setFiltered(temp);
     setCurrentPage(1);
-
   }, [products, searchTerm, selectedCategory, sortOrder]);
 
+  const indexOfLast = currentPage * productsPerPage;
+  const currentProducts = filtered.slice(
+    indexOfLast - productsPerPage,
+    indexOfLast
+  );
+  const totalPages = Math.ceil(filtered.length / productsPerPage);
 
-  const isInCart = (id) =>
-    cartItems.some((item) => item.id === id);
+  const convertToINR = (usd) => (usd * 83).toLocaleString("en-IN");
 
-
-  const increaseQty = (id) => {
-
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: prev[id] + 1
-    }));
-
+  const getStars = (rating) => {
+    const fullStars = Math.floor(rating);
+    const emptyStars = 5 - fullStars;
+    return "★".repeat(fullStars) + "☆".repeat(emptyStars);
   };
-
-
-  const decreaseQty = (id) => {
-
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: prev[id] > 1 ? prev[id] - 1 : 1
-    }));
-
-  };
-
-
-  const handleRating = (productId, value) => {
-
-    setRatings((prev) => ({
-      ...prev,
-      [productId]: value
-    }));
-
-  };
-
-
-  const renderStars = (productId, apiRating) => {
-
-    const currentRating =
-      ratings[productId] || Math.round(apiRating);
-
-    return (
-
-      <div style={{ display: "flex", gap: "5px", cursor: "pointer" }}>
-
-        {[1,2,3,4,5].map((star) => (
-
-          <span
-            key={star}
-            style={{
-              fontSize: "18px",
-              color: star <= currentRating ? "gold" : "#ccc"
-            }}
-            onClick={() => handleRating(productId, star)}
-          >
-            ★
-          </span>
-
-        ))}
-
-      </div>
-
-    );
-
-  };
-
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-
-  const currentProducts =
-    filteredProducts.slice(indexOfFirstProduct, indexOfLastProduct);
-
-  const totalPages =
-    Math.ceil(filteredProducts.length / productsPerPage);
-
-
 
   return (
+    <div className={`${darkMode ? "bg-[#222]" : "bg-[#f5f7fa]"} min-h-screen`}>
+      <div className="w-[95%] max-w-[1200px] mx-auto py-6">
 
-    <div className="container home-container flex align-center flex-col">
+        {/* Title */}
+        <h2 className="text-center text-2xl font-bold text-red-600 mb-6">
+          Products
+        </h2>
 
-      <h2>Products</h2>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
 
+          {/* Categories */}
+          <div className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-2 py-1 rounded text-xs capitalize ${
+                  selectedCategory === cat
+                    ? "bg-black text-white"
+                    : "bg-gray-200 dark:bg-[#2c2c2c] dark:text-white"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
 
-      <div style={{ marginBottom: "20px" }}>
-
-        {categories.map((cat) => (
-
-          <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            style={{
-              margin: "5px",
-              padding: "6px 12px",
-              background: selectedCategory === cat ? "#000" : "#eee",
-              color: selectedCategory === cat ? "#fff" : "#000",
-              border: "none",
-              cursor: "pointer"
-            }}
+          {/* Sort */}
+          <select
+            value={sortOrder}
+            onChange={(e) => setSortOrder(e.target.value)}
+            className={`p-2 rounded text-sm ${
+              darkMode ? "bg-[#2c2c2c] text-white" : "bg-white"
+            }`}
           >
-            {cat}
-          </button>
+            <option value="">Sort By Price</option>
+            <option value="low">Low → High</option>
+            <option value="high">High → Low</option>
+          </select>
+        </div>
 
-        ))}
+        {/* Product Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
 
-      </div>
+          {currentProducts.map((item) => {
+            const cartItem = cartItems.find((i) => i.id === item.id);
+            const quantity = cartItem ? cartItem.quantity : 1;
 
-
-      <div style={{ marginBottom: "20px" }}>
-
-        <select
-          value={sortOrder}
-          onChange={(e) => setSortOrder(e.target.value)}
-        >
-
-          <option value="">Sort By Price</option>
-          <option value="low">Low → High</option>
-          <option value="high">High → Low</option>
-
-        </select>
-
-      </div>
-
-
-      <div className="product-grid">
-
-        {currentProducts.map((item) => {
-
-          const quantity = quantities[item.id] || 1;
-
-          return (
-
-            <div key={item.id} className="product-card">
-
-              <img src={item.thumbnail} alt={item.title} />
-
-             
-              <h4 className="text-black dark:text-white">{item.title}</h4>
-
-              <p>₹{convertToINR(item.price)}</p>
-
-              {renderStars(item.id, item.rating)}
-
-
-              {isInCart(item.id) && (
-
-                <div style={{ margin: "10px 0" }}>
-
-                  <button onClick={() => decreaseQty(item.id)}>-</button>
-
-                  <span
-                    style={{ margin: "0 10px" }}
-                    className="text-black dark:text-white"
-                  >
-                    {quantity}
-                  </span>
-
-                  <button onClick={() => increaseQty(item.id)}>+</button>
-
+            return (
+              <div
+                key={item.id}
+                className="bg-white dark:bg-[#2c2c2c] p-3 rounded-lg shadow flex flex-col"
+              >
+                <div className="h-40 flex items-center justify-center bg-gray-100 rounded">
+                  <img
+                    src={item.thumbnail}
+                    alt={item.title}
+                    className="max-h-full object-contain"
+                  />
                 </div>
 
-              )}
+                <h4 className="mt-2 text-sm font-semibold text-black dark:text-white line-clamp-2">
+                  {item.title}
+                </h4>
 
+                <p className="text-yellow-400 text-sm">
+                  {getStars(item.rating)}
+                </p>
 
-              <button
-                className="btn"
-                onClick={() =>
-                  dispatch(addToCart({ ...item, quantity }))
-                }
-              >
+                <p className="text-red-600 font-bold text-sm">
+                  ₹{convertToINR(item.price)}
+                </p>
 
-                {isInCart(item.id) ? "Added ✓" : "Add To Cart"}
+                {cartItem && (
+                  <div className="flex items-center gap-2 mt-1 text-sm">
+                    <button
+                      onClick={() => dispatch(decreaseQuantity(item.id))}
+                      className="bg-red-500 text-white px-2 rounded"
+                    >
+                      -
+                    </button>
+                    <span>{quantity}</span>
+                    <button
+                      onClick={() => dispatch(increaseQuantity(item.id))}
+                      className="bg-green-500 text-white px-2 rounded"
+                    >
+                      +
+                    </button>
+                  </div>
+                )}
 
-              </button>
+                <button
+                  onClick={() =>
+                    dispatch(addToCart({ ...item, quantity }))
+                  }
+                  className={`mt-2 py-1 rounded text-xs ${
+                    cartItem
+                      ? "bg-green-500 text-white"
+                      : "bg-[#3600e6] text-white"
+                  }`}
+                >
+                  {cartItem ? "Added ✓" : "Add To Cart"}
+                </button>
+              </div>
+            );
+          })}
+        </div>
 
-            </div>
+        {/* ✅ Smart Pagination */}
+        <div className="flex justify-center gap-2 mt-6">
 
-          );
-
-        })}
-
-      </div>
-
-      <div style={{ marginTop: "30px", display: "flex", justifyContent: "center", alignItems: "center"}}>
-
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage((prev) => prev - 1)}
-        >
-          ◀
-        </button>
-
-
-        {[...Array(totalPages)].map((_, index) => (
-
+          {/* Previous Arrow */}
           <button
-            key={index}
-            onClick={() => setCurrentPage(index + 1)}
-            style={{
-              margin: "5px",
-              background: currentPage === index + 1 ? "#000" : "#eee",
-              color: currentPage === index + 1 ? "#fff" : "#000"
-            }}
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-300 rounded text-sm"
           >
-            {index + 1}
+            ←
           </button>
 
-        ))}
+          {/* Previous Page */}
+          {currentPage > 1 && (
+            <button
+              onClick={() => setCurrentPage(currentPage - 1)}
+              className="px-3 py-1 bg-gray-300 rounded text-sm"
+            >
+              {currentPage - 1}
+            </button>
+          )}
 
+          {/* Current Page */}
+          <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+            {currentPage}
+          </button>
 
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage((prev) => prev + 1)}
-        >
-          ▶
-        </button>
+          {/* Next Page */}
+          {currentPage < totalPages && (
+            <button
+              onClick={() => setCurrentPage(currentPage + 1)}
+              className="px-3 py-1 bg-gray-300 rounded text-sm"
+            >
+              {currentPage + 1}
+            </button>
+          )}
 
+          {/* Next Arrow */}
+          <button
+            onClick={() =>
+              setCurrentPage((p) => Math.min(p + 1, totalPages))
+            }
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-300 rounded text-sm"
+          >
+            →
+          </button>
+
+        </div>
       </div>
-
     </div>
-
   );
-
 }
 
 export default Home;

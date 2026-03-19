@@ -1,13 +1,17 @@
+import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
 import { store } from "./redux/store";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
 import App from "./App";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import AddProduct from "./pages/AddProduct";
 import Checkout from "./pages/Checkout";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -15,32 +19,43 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-      {
-        index: true,
-        element: <Login />
-      },
+      // { index: true, element: <Login /> },
+      { path: "login", element: <Login /> },
       {
         path: "home",
-        element: <Home />
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "cart",
-        element: <Cart />
+        element: (
+          <ProtectedRoute>
+            <Cart />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "add-product",
-        element: <AddProduct />
+        element: (
+          <ProtectedRoute>
+            <AddProduct />
+          </ProtectedRoute>
+        ),
       },
       {
         path: "checkout",
-        element: <Checkout />
+        element: (
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        ),
       },
-      {
-        path: "*",
-        element: <h1>Page Not Found</h1>
-      }
-    ]
-  }
+      { path: "*", element: <h1>Page Not Found</h1> },
+    ],
+  },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
