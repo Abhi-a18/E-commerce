@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// Load auth state from localStorage on startup
 const storedAuth = localStorage.getItem("auth")
   ? JSON.parse(localStorage.getItem("auth"))
   : null;
@@ -31,7 +30,7 @@ const initialState = {
   token: storedAuth?.token || null,
   loading: false,
   error: null,
-  authChecked: false, // ✅ new flag to indicate auth restoration
+  authChecked: false, 
 };
 
 const authSlice = createSlice({
@@ -51,7 +50,7 @@ const authSlice = createSlice({
         state.user = stored.user;
         state.token = stored.token;
       }
-      state.authChecked = true; // ✅ mark restoration done
+      state.authChecked = true; 
     },
   },
   extraReducers: (builder) => {

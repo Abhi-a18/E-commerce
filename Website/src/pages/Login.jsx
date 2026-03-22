@@ -15,9 +15,12 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     const res = await dispatch(loginUser(form));
+
     if (res.meta.requestStatus === "fulfilled") {
-      localStorage.setItem("auth", "true");
+      
+
       navigate("/home");
     }
   };
@@ -44,7 +47,10 @@ function Login() {
           placeholder="Username"
           required
           autoComplete="username"
-          onChange={(e) => setForm({ ...form, username: e.target.value })}
+          value={form.username}
+          onChange={(e) =>
+            setForm({ ...form, username: e.target.value })
+          }
           className="px-4 py-3 border rounded outline-none dark:bg-[#2c2c2c] dark:text-white text-base sm:text-lg"
         />
 
@@ -53,16 +59,24 @@ function Login() {
           placeholder="Password"
           required
           autoComplete="current-password"
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
+          value={form.password}
+          onChange={(e) =>
+            setForm({ ...form, password: e.target.value })
+          }
           className="px-4 py-3 border rounded outline-none dark:bg-[#2c2c2c] dark:text-white text-base sm:text-lg"
         />
 
-        <button className="bg-[#3600e6] text-white py-3 sm:py-4 rounded hover:bg-green-500 transition text-base sm:text-lg ">
+        <button
+          type="submit"
+          className="bg-[#3600e6] text-white py-3 sm:py-4 rounded hover:bg-green-500 transition text-base sm:text-lg"
+        >
           {loading ? "Loading..." : "Login"}
         </button>
 
         {error && (
-          <p className="text-red-500 text-sm text-center">{error}</p>
+          <p className="text-red-500 text-sm text-center">
+            {error}
+          </p>
         )}
       </form>
     </div>

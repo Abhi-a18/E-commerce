@@ -23,6 +23,10 @@ function App() {
     if (!user && !publicPaths.includes(location.pathname)) {
       navigate("/login");
     }
+
+    if (user && publicPaths.includes(location.pathname)) {
+      navigate("/");
+    }
   }, [authChecked, user, location.pathname, navigate]);
 
   const [darkMode, setDarkMode] = useState(
@@ -36,13 +40,13 @@ function App() {
 
   const [searchTerm, setSearchTerm] = useState("");
 
-  const hideNavbar = location.pathname === "/login" || !user;
+  const hideNavbar = ["/login", "/register"].includes(location.pathname);
 
   if (!authChecked) return <div>Loading...</div>;
 
   return (
     <div className="transition-colors duration-300">
-      {!hideNavbar && (
+      {!hideNavbar && user && (
         <Navbar
           onSearch={(value) => setSearchTerm(value)}
           darkMode={darkMode}
