@@ -67,12 +67,13 @@ function Checkout() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        //  minHeight: "100vh",
         backgroundColor: darkMode ? "#121212" : "#f5f5f5",
         color: darkMode ? "#fff" : "#000",
         display: "flex",
         justifyContent: "center",
-        paddingTop: "40px",
+        paddingTop: "50px",
+       
       }}
     >
       <div

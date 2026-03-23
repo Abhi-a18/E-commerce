@@ -1,52 +1,49 @@
+// src/pages/Home.jsx
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  addToCart,
-  increaseQuantity,
-  decreaseQuantity,
-} from "../redux/cartSlice";
-import { setProducts } from "../redux/ProductSlice";
-import axios from "axios";
+import { addToCart, increaseQuantity, decreaseQuantity } from "../redux/cartSlice";
+import { fetchProducts } from "../redux/ProductSlice"; // Redux thunk
 import { useOutletContext } from "react-router-dom";
 
 function Home() {
   const dispatch = useDispatch();
   const products = useSelector((state) => state.product.products);
   const cartItems = useSelector((state) => state.cart.items);
-
   const { searchTerm, darkMode } = useOutletContext();
 
   const [filtered, setFiltered] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortOrder, setSortOrder] = useState("");
-
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 8;
 
+  // ✅ Fetch products on mount
   useEffect(() => {
     if (products.length === 0) {
-      axios.get("https://dummyjson.com/products").then((res) => {
-        dispatch(setProducts(res.data.products));
-      });
+      dispatch(fetchProducts());
     }
   }, [dispatch, products.length]);
 
+  // ✅ Extract categories dynamically
   useEffect(() => {
     const cats = ["all", ...new Set(products.map((p) => p.category))];
     setCategories(cats);
   }, [products]);
 
+  // ✅ Filter and sort products
   useEffect(() => {
     let temp = [...products];
 
-    if (searchTerm)
+    if (searchTerm) {
       temp = temp.filter((p) =>
         p.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
+    }
 
-    if (selectedCategory !== "all")
+    if (selectedCategory !== "all") {
       temp = temp.filter((p) => p.category === selectedCategory);
+    }
 
     if (sortOrder === "low") temp.sort((a, b) => a.price - b.price);
     if (sortOrder === "high") temp.sort((a, b) => b.price - a.price);
@@ -55,13 +52,12 @@ function Home() {
     setCurrentPage(1);
   }, [products, searchTerm, selectedCategory, sortOrder]);
 
+  // ✅ Pagination
   const indexOfLast = currentPage * productsPerPage;
-  const currentProducts = filtered.slice(
-    indexOfLast - productsPerPage,
-    indexOfLast
-  );
+  const currentProducts = filtered.slice(indexOfLast - productsPerPage, indexOfLast);
   const totalPages = Math.ceil(filtered.length / productsPerPage);
 
+  // ✅ Utility functions
   const convertToINR = (usd) => (usd * 83).toLocaleString("en-IN");
 
   const getStars = (rating) => {
@@ -91,7 +87,7 @@ function Home() {
                 className={`px-2 py-1 rounded text-xs capitalize ${
                   selectedCategory === cat
                     ? "bg-black text-white"
-                    : "bg-gray-200 dark:bg-[#2c2c2c] dark:text-white"
+                    : `bg-gray-200 dark:bg-[#2c2c2c] dark:text-white`
                 }`}
               >
                 {cat}
@@ -103,9 +99,7 @@ function Home() {
           <select
             value={sortOrder}
             onChange={(e) => setSortOrder(e.target.value)}
-            className={`p-2 rounded text-sm ${
-              darkMode ? "bg-[#2c2c2c] text-white" : "bg-white"
-            }`}
+            className={`p-2 rounded text-sm ${darkMode ? "bg-[#2c2c2c] text-white" : "bg-white"}`}
           >
             <option value="">Sort By Price</option>
             <option value="low">Low → High</option>
@@ -115,31 +109,21 @@ function Home() {
 
         {/* Product Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-
           {currentProducts.map((item) => {
             const cartItem = cartItems.find((i) => i.id === item.id);
             const quantity = cartItem ? cartItem.quantity : 1;
 
             return (
-              <div
-                key={item.id}
-                className="bg-white dark:bg-[#2c2c2c] p-3 rounded-lg shadow flex flex-col"
-              >
+              <div key={item.id} className="bg-white dark:bg-[#2c2c2c] p-3 rounded-lg shadow flex flex-col">
                 <div className="h-40 flex items-center justify-center bg-gray-100 rounded">
-                  <img
-                    src={item.thumbnail}
-                    alt={item.title}
-                    className="max-h-full object-contain"
-                  />
+                  <img src={item.thumbnail} alt={item.title} className="max-h-full object-contain" />
                 </div>
 
                 <h4 className="mt-2 text-sm font-semibold text-black dark:text-white line-clamp-2">
                   {item.title}
                 </h4>
 
-                <p className="text-yellow-400 text-sm">
-                  {getStars(item.rating)}
-                </p>
+                <p className="text-yellow-400 text-sm">{getStars(item.rating)}</p>
 
                 <p className="text-red-600 font-bold text-sm">
                   ₹{convertToINR(item.price)}
@@ -164,13 +148,9 @@ function Home() {
                 )}
 
                 <button
-                  onClick={() =>
-                    dispatch(addToCart({ ...item, quantity }))
-                  }
+                  onClick={() => dispatch(addToCart({ ...item, quantity }))}
                   className={`mt-2 py-1 rounded text-xs ${
-                    cartItem
-                      ? "bg-green-500 text-white"
-                      : "bg-[#3600e6] text-white"
+                    cartItem ? "bg-green-500 text-white" : "bg-[#3600e6] text-white"
                   }`}
                 >
                   {cartItem ? "Added ✓" : "Add To Cart"}
@@ -180,10 +160,8 @@ function Home() {
           })}
         </div>
 
-        {/* ✅ Smart Pagination */}
+        {/* Pagination */}
         <div className="flex justify-center gap-2 mt-6">
-
-          {/* Previous Arrow */}
           <button
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={currentPage === 1}
@@ -192,7 +170,6 @@ function Home() {
             ←
           </button>
 
-          {/* Previous Page */}
           {currentPage > 1 && (
             <button
               onClick={() => setCurrentPage(currentPage - 1)}
@@ -202,12 +179,10 @@ function Home() {
             </button>
           )}
 
-          {/* Current Page */}
           <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
             {currentPage}
           </button>
 
-          {/* Next Page */}
           {currentPage < totalPages && (
             <button
               onClick={() => setCurrentPage(currentPage + 1)}
@@ -217,18 +192,15 @@ function Home() {
             </button>
           )}
 
-          {/* Next Arrow */}
           <button
-            onClick={() =>
-              setCurrentPage((p) => Math.min(p + 1, totalPages))
-            }
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={currentPage === totalPages}
             className="px-3 py-1 bg-gray-300 rounded text-sm"
           >
             →
           </button>
-
         </div>
+
       </div>
     </div>
   );

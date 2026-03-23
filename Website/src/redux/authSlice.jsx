@@ -1,24 +1,18 @@
+// src/redux/authSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import { loginUserApi } from "../api/Authapi";
 
 const storedAuth = localStorage.getItem("auth")
   ? JSON.parse(localStorage.getItem("auth"))
   : null;
 
+// Async thunk using the API function
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(
-        "https://dummyjson.com/auth/login",
-        {
-          username: userData.username,
-          password: userData.password,
-          expiresInMins: 30,
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
-      return response.data;
+      const data = await loginUserApi(userData); // use API function
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data || { message: "Login failed" });
     }
@@ -30,7 +24,7 @@ const initialState = {
   token: storedAuth?.token || null,
   loading: false,
   error: null,
-  authChecked: false, 
+  authChecked: false,
 };
 
 const authSlice = createSlice({
@@ -50,7 +44,7 @@ const authSlice = createSlice({
         state.user = stored.user;
         state.token = stored.token;
       }
-      state.authChecked = true; 
+      state.authChecked = true;
     },
   },
   extraReducers: (builder) => {
