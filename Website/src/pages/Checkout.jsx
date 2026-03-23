@@ -84,6 +84,7 @@ function Checkout() {
           maxWidth: "600px",
           backgroundColor: darkMode ? "#1e1e1e" : "#ffffff",
           boxShadow: "0 0 10px rgba(0,0,0,0.2)",
+          marginBottom: "50px",
         }}
       >
         <h2 className="text-center mb-4">Checkout</h2>
