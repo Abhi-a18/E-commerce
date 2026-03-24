@@ -4,6 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
-  base: process.env.VITE_BASE_URL || "/E-commerce/Website",
+  base: process.env.VITE_BASE_URL || "/E-commerce",
 }
 );
