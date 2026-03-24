@@ -1,0 +1,12 @@
+@import "tailwindcss";
+@custom-variant dark (&:where (.dark, .dark));
+/* index.css or global stylesheet */
+select option {
+  color: black;
+  background-color: white;
+}
+
+.dark select option {
+  color: white;
+  background-color: #2c2c2c;
+}
